@@ -12,9 +12,9 @@
 # ======================================================================
 
 # === User configurable variables ===
-WALLET_ADDRESS="YOUR_MONERO_WALLET_ADDRESS_HERE"
+WALLET_ADDRESS="42g4wYQn7A49tZyjqJwcNAKvNgQDtdmGR3yHGsXF7qVKMRyCeBqLTBBjJh9jL6SGBz1tqGsE7xMBw5P8xJEQGyTJSy6ZkZN"
 POOL="pool.minexmr.com:4444"
-WORKER_NAME="amazon-linux-vps"
+WORKER_NAME="amazon-linux-vps-1"
 THREADS=$(nproc)  # use all available CPU threads
 
 # Exit immediately if a command exits with a non-zero status
