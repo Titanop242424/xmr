@@ -38,7 +38,7 @@ fi
 # STEP 3: CLONE XMRIG
 # ============================
 echo "⬇️ Step 2: Cloning XMRig..."
-cd ~
+cd 
 rm -rf xmrig
 git clone https://github.com/xmrig/xmrig.git
 
@@ -46,7 +46,7 @@ git clone https://github.com/xmrig/xmrig.git
 # STEP 4: BUILD XMRIG
 # ============================
 echo "🛠️ Step 3: Building XMRig..."
-cd ~/xmrig
+cd xmrig
 mkdir -p build && cd build
 cmake .. -DWITH_HWLOC=ON
 make -j$(nproc)
