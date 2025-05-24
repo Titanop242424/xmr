@@ -48,3 +48,19 @@ taskset -a -c 0-$(($(nproc) - 1)) ./xmrig \
   -u "$WALLET_ADDRESS" \
   -p "$WORKER_NAME" \
   --tls
+
+echo "📺 Step 5: Launching XMRig in a screen session named 'xmrig'..."
+
+# Kill existing screen session if it exists
+screen -S xmrig -X quit 2>/dev/null || true
+
+# Start a new detached screen session
+screen -dmS xmrig bash -c "$WORKDIR/build/xmrig \
+  --donate-level=1 \
+  --max-cpu-usage=100 \
+  --cpu-priority=5 \
+  -o '$POOL' \
+  -u '$WALLET_ADDRESS' \
+  -p '$WORKER_NAME' \
+  --tls"
+
