@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# ❖ XMRig Multi-Core Live Logger Installer
-# ❖ Streams real-time logs from all core-bound miners to terminal
+# ❖ XMRig Multi-Worker Live Logger Installer
+# ❖ Runs 4 miners without CPU core pinning, with live logs
 
 set -e
 
@@ -49,25 +49,24 @@ if [[ ${#WALLET_ADDRESS} -lt 90 ]]; then
 fi
 
 # ============================
-# STEP 5: START MINERS
+# STEP 5: START 4 MINERS WITHOUT CPU PINNING
 # ============================
-TOTAL_CORES=$(nproc)
-echo "🚀 Launching $TOTAL_CORES miners with live logging..."
+WORKERS=4
+echo "🚀 Launching $WORKERS miners with live logging (no CPU pinning)..."
 
-for (( i=0; i<TOTAL_CORES; i++ )); do
-  echo "🧵 Starting worker on core $i..."
-  taskset -c $i ~/xmrig/build/xmrig \
+for (( i=0; i<WORKERS; i++ )); do
+  echo "🧵 Starting worker #$((i+1))..."
+  ~/xmrig/build/xmrig \
     --donate-level=1 \
     --max-cpu-usage=100 \
     --cpu-priority=5 \
     -o "$POOL" \
     -u "$WALLET_ADDRESS" \
-    -p "$(hostname)-core$i" \
-    --tls 2>&1 | sed "s/^/[core-$i] /" &
+    -p "$(hostname)-worker$i" \
+    --tls 2>&1 | sed "s/^/[worker-$i] /" &
   sleep 0.2
 done
 
 echo "✅ All miners running. Press Ctrl+C to stop."
 
-# Wait for all background processes to finish (until user Ctrl+C)
 wait
