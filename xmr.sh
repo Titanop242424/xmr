@@ -1,53 +1,38 @@
 #!/bin/bash
 
-# ======================================================================
-# Setup script to install dependencies, build and run XMRig miner on Amazon Linux
-# by BLACKBOXAI
-# Usage:
-#   1. Update the WALLET_ADDRESS variable to your Monero wallet address.
-#   2. Run: bash setup_xmrig.sh
-#
-# This script installs necessary dependencies (hwloc, libuv, openssl, git, cmake),
-# clones the xmrig repository, builds it, and starts mining Monero using recommended settings.
-# ======================================================================
+# Script to install dependencies, build XMRig, and start mining Monero (XMR) on Ubuntu VPS
+# Using 2Miners pool with 0% fee and low minimum payout
 
-# === User configurable variables ===
-WALLET_ADDRESS="42g4wYQn7A49tZyjqJwcNAKvNgQDtdmGR3yHGsXF7qVKMRyCeBqLTBBjJh9jL6SGBz1tqGsE7xMBw5P8xJEQGyTJSy6ZkZN"
-POOL="pool.minexmr.com:4444"
-WORKER_NAME="amazon-linux-vps-1"
-THREADS=$(nproc)  # use all available CPU threads
+# Update and install dependencies
+echo "Updating system and installing dependencies..."
+sudo apt update
+sudo apt install -y git build-essential cmake libuv1-dev libssl-dev libhwloc-dev
 
-# Exit immediately if a command exits with a non-zero status
-set -e
-
-echo "===== Updating system packages ====="
-sudo yum update -y
-
-echo "===== Installing development tools and libraries ====="
-sudo yum groupinstall "Development Tools" -y
-sudo yum install -y git cmake make gcc-c++ hwloc hwloc-devel libuv libuv-devel openssl openssl-devel
-
-echo "===== Cloning XMRig repository ====="
-if [ ! -d "xmrig" ]; then
-  git clone https://github.com/xmrig/xmrig.git
-else
-  echo "xmrig directory already exists. Skipping clone."
+# Download latest XMRig source
+echo "Downloading XMRig source code..."
+cd ~
+if [ -d xmrig ]; then
+  rm -rf xmrig
 fi
+git clone https://github.com/xmrig/xmrig.git
 
-echo "===== Building XMRig ====="
+# Build XMRig
+echo "Building XMRig..."
 cd xmrig
-mkdir -p build
-cd build
+mkdir -p build && cd build
 cmake ..
 make -j$(nproc)
 
-echo "===== Starting XMRig miner ====="
-# Run xmrig with:
-# - pool address
-# - user wallet address
-# - worker name for mining pool identification
-# - donate-level 1 to keep miner support
-# - tuned for CPU mining (threads, CPU affinity auto)
-./xmrig -o $POOL -u $WALLET_ADDRESS -p $WORKER_NAME -k --coin monero --donate-level 1 --threads=$THREADS
+# Check if build succeeded
+if [ ! -f xmrig ]; then
+  echo "Build failed! Exiting."
+  exit 1
+fi
 
-# Note: The miner will keep running in the terminal. To stop, press Ctrl+C.
+# Mining configuration parameters
+WALLET_ADDRESS="42g4wYQn7A49tZyjqJwcNAKvNgQDtdmGR3yHGsXF7qVKMRyCeBqLTBBjJh9jL6SGBz1tqGsE7xMBw5P8xJEQGyTJSy6ZkZN"  # Replace with your Monero wallet address
+POOL="xmr.2miners.com:1010"
+WORKER_NAME="$(hostname)-xmrig"
+
+echo "Starting XMRig mining on 2Miners pool..."
+./xmrig --donate-level=1 --max-cpu-usage=100 -o $POOL -u $WALLET_ADDRESS -p $WORKER_NAME --cpu-priority=5
