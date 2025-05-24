@@ -27,7 +27,8 @@ if [ "$1" != "run" ]; then
   echo "✅ Build finished! Starting miner..."
 
   # Run script again with argument 'run' to start mining
-  exec ~/xmrig/xmrig-auto-dual.sh run
+  exec "$0" run
+
 fi
 
 # === Mining start logic here ===
