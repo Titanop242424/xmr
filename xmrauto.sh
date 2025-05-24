@@ -75,7 +75,7 @@ echo "🚀 Launching $WORKERS miners bound to cores..."
 for (( i=0; i<WORKERS; i++ )); do
   CORE=$(( i % TOTAL_CORES ))   # cycle cores if workers > cores
   echo "🧵 Starting worker $i bound to core $CORE..."
-  taskset -c $CORE ~/xmrig/build/xmrig \
+  taskset -c $i /home/ubuntu/xmrig/build/xmrig \
     --donate-level=1 \
     --max-cpu-usage=100 \
     --cpu-priority=5 \
