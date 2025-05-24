@@ -27,8 +27,7 @@ if [ "$1" != "run" ]; then
   echo "✅ Build finished! Starting miner..."
 
   # Run script again with argument 'run' to start mining
-  exec "$0" run
-
+   exec "$(realpath "$0")" run
 fi
 
 # === Mining start logic here ===
