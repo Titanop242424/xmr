@@ -9,7 +9,7 @@ echo "🔧 Step 1: Updating system and installing dependencies..."
 sudo apt update && sudo apt install -y git build-essential cmake libuv1-dev libssl-dev libhwloc-dev
 
 echo "⬇️ Step 2: Cloning XMRig repository..."
-cd
+cd /home/ubuntu
 rm -rf xmrig
 git clone https://github.com/xmrig/xmrig.git
 
