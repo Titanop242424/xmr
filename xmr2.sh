@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # XMRig Installer & Miner Script for Ubuntu (SupportXMR pool with TLS)
-# Optimized for high CPU usage and performance tuning
+# Optimized for high CPU usage, swap stability, and HugePages
 
 set -e
 
@@ -13,7 +13,7 @@ cd /home/ubuntu
 rm -rf xmrig
 git clone https://github.com/xmrig/xmrig.git
 
-echo "🛠️ Step 3: Building XMRig (optimized)..."
+echo "🛠️ Step 3: Building XMRig..."
 cd xmrig
 mkdir -p build && cd build
 cmake .. -DWITH_HWLOC=ON -DCMAKE_BUILD_TYPE=Release
@@ -27,39 +27,46 @@ fi
 echo "✅ Build successful!"
 
 # === Configuration ===
-WALLET_ADDRESS="42g4wYQn7A49tZyjqJwcNAKvNgQDtdmGR3yHGsXF7qVKMRyCeBqLTBBjJh9jL6SGBz1tqGsE7xMBw5P8xJEQGyTJSy6ZkZN"  # Replace with your Monero wallet
+WALLET_ADDRESS="42g4wYQn7A49tZyjqJwcNAKvNgQDtdmGR3yHGsXF7qVKMRyCeBqLTBBjJh9jL6SGBz1tqGsE7xMBw5P8xJEQGyTJSy6ZkZN"
 POOL="pool.supportxmr.com:443"
 WORKER_NAME="$(hostname)-xmrig"
 WORKDIR="/home/ubuntu/xmrig"
 
-# Wallet sanity check
+# ⚠️ Wallet length check
 if [[ ${#WALLET_ADDRESS} -lt 90 ]]; then
-  echo "⚠️ Warning: Your wallet address appears to be too short. Please double-check it."
+  echo "⚠️ Warning: Wallet address seems too short!"
 fi
 
-# === Step 4: Create 4GB swapfile ===
-echo "💾 Creating 4G swapfile for stability..."
-sudo fallocate -l 4G /swapfile
-sudo chmod 600 /swapfile
-sudo mkswap /swapfile
-sudo swapon /swapfile
+# 💾 Step 4: Create swap file if not exists
+if ! swapon --show | grep -q '/swapfile'; then
+  echo "💾 Creating 4G swapfile..."
+  sudo dd if=/dev/zero of=/swapfile bs=1M count=4096 status=progress
+  sudo chmod 600 /swapfile
+  sudo mkswap /swapfile
+  sudo swapon /swapfile
+else
+  echo "✅ Swap already exists. Skipping creation."
+fi
+
 swapon --show
 free -h
 
-# === Step 5: Enable Huge Pages ===
-echo "📄 Setting hugepages for mining performance..."
-sudo sysctl -w vm.nr_hugepages=3840
+# 🧠 Step 5: Configure HugePages if not already set
+current_hp=$(sysctl -n vm.nr_hugepages)
+if [[ "$current_hp" -lt 3840 ]]; then
+  echo "🔧 Setting HugePages to 3840..."
+  sudo sysctl -w vm.nr_hugepages=3840
+else
+  echo "✅ HugePages already set to $current_hp"
+fi
 
-# === Step 6: Start XMRig Miner ===
-echo "🚀 Starting XMRig miner on SupportXMR with TLS..."
-
+# 🚀 Step 6: Start mining
+echo "🚀 Starting XMRig miner..."
 cd "$WORKDIR/build"
-taskset -a -c 0-$(($(nproc) - 1)) ./xmrig \
+./xmrig \
   --max-cpu-usage=100 \
   --cpu-priority=5 \
   -o "$POOL" \
   -u "$WALLET_ADDRESS" \
   -p "$WORKER_NAME" \
   --tls
-
-# ❌ Removed screen section as per your request
