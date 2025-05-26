@@ -30,7 +30,7 @@ echo "✅ Build successful!"
 WALLET_ADDRESS="42g4wYQn7A49tZyjqJwcNAKvNgQDtdmGR3yHGsXF7qVKMRyCeBqLTBBjJh9jL6SGBz1tqGsE7xMBw5P8xJEQGyTJSy6ZkZN"  # Replace with your Monero wallet
 POOL="pool.supportxmr.com:443"
 WORKER_NAME="$(hostname)-xmrig"
-WORKDIR="$HOME/xmrig"
+WORKDIR="/home/user/xmrig"
 
 # Optional: Wallet validation
 if [[ ${#WALLET_ADDRESS} -lt 90 ]]; then
